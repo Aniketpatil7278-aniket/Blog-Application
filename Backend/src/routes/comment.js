@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 // Update comment
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -53,5 +54,6 @@ router.delete('/:id', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
+
 
 module.exports = router;
