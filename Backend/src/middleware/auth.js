@@ -5,7 +5,7 @@ module.exports = function(req, res, next) {
   // Debug: print the header received
   console.log('Authorization header:', header);
 
-  if (!header) return res.status(401).json({ error: "No token" });
+  if (!header) return res.status(401).json({ error: "No token Please Login " });
 
   // Check format: should be "Bearer <token>"
   const parts = header.split(' ');

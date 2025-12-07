@@ -1,100 +1,115 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from "react";
+import api from "../api";
+import toast from "react-hot-toast";
 
 export default function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [text, setText] = useState("");
 
   const fetchComments = async () => {
-    setLoading(true);
     try {
       const res = await api.get(`/api/comments?post_id=${postId}`);
       setComments(res.data);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load comments');
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!postId) return;
-    fetchComments();
+    if (postId) fetchComments();
   }, [postId]);
 
   const submit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/comments', { postId, content: text });
-      toast.success('Comment added');
-      setText('');
+      await api.post("/api/comments", { postId, content: text });
+      toast.success("Comment added");
+      setText("");
       fetchComments();
     } catch (err) {
       console.error(err);
-      toast.error(err?.response?.data?.error || 'Failed to add comment');
+      toast.error("Failed to add comment");
+    }
+  };
+
+  const onDelete = async (id) => {
+    if (!confirm("Delete comment?")) return;
+    try {
+      await api.delete(`/api/comments/${id}`);
+      toast.success("Deleted");
+      fetchComments();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete");
+    }
+  };
+
+  const onEdit = async (c) => {
+    const newText = prompt("Edit comment", c.content);
+    if (newText === null) return;
+    try {
+      await api.put(`/api/comments/${c._id}`, { content: newText });
+      toast.success("Updated");
+      fetchComments();
+    } catch (err) {
+      console.error(err);
+      toast.error("Update failed");
     }
   };
 
   return (
-    <div className="mt-6 p-4 bg-white/70 backdrop-blur-md rounded-xl shadow-lg border border-gray-200">
-      <h4 className="font-semibold text-xl mb-4 text-gray-800 flex items-center gap-2">
-        💬 Comments
-      </h4>
+    <div className="mt-8 p-6 bg-white/30 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-xl">
+      <h4 className="text-xl font-semibold mb-4 text-gray-800">💬 Comments</h4>
 
-      {loading && (
-        <div className="text-gray-600 animate-pulse">Loading comments...</div>
-      )}
-
-      {!loading && comments.length === 0 && (
-        <div className="text-gray-500 italic">No comments yet.</div>
-      )}
-
+      {/* COMMENT LIST */}
       <div className="space-y-4">
         {comments.map((c) => (
           <div
             key={c._id}
-            className="p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition"
+            className="p-4 bg-white/80 rounded-xl shadow-md"
           >
-            <div className="flex items-start gap-3">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow">
-                {c.author?.username?.charAt(0).toUpperCase() || "U"}
-              </div>
+            <p className="text-gray-900 text-lg">{c.content}</p>
 
-              {/* Comment Content */}
-              <div className="flex-1">
-                <p className="text-gray-800">{c.content}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  By <span className="font-medium">{c.author?.username || 'Unknown'}</span> •{' '}
-                  {new Date(c.createdAt).toLocaleString()}
-                </p>
-              </div>
+            <p className="text-xs text-gray-600 mt-1">
+              By{" "}
+              <span className="font-semibold">
+                {c.author?.username || "Unknown"}
+              </span>{" "}
+              • {new Date(c.createdAt).toLocaleString()}
+            </p>
+
+            <div className="mt-3 flex gap-4">
+              <button
+                onClick={() => onEdit(c)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition"
+              >
+                ✏ Edit
+              </button>
+
+              <button
+                onClick={() => onDelete(c._id)}
+                className="text-red-600 hover:text-red-800 text-sm font-semibold transition"
+              >
+                🗑 Delete
+              </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add comment box */}
-      <form
-        onSubmit={submit}
-        className="mt-6 bg-white p-4 rounded-lg shadow border border-gray-100"
-      >
+      {/* ADD COMMENT */}
+      <form onSubmit={submit} className="mt-6">
         <textarea
-          className="w-full bg-gray-50 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg p-3 outline-none transition"
           rows="3"
-          placeholder="Write a friendly comment..."
+          className="w-full p-3 rounded-xl bg-white/80 text-gray-900 border border-gray-300 backdrop-blur-lg outline-none focus:ring-2 focus:ring-yellow-400 transition"
+          placeholder="Write a comment..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           required
         />
 
         <div className="flex justify-end mt-3">
-          <button
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition active:scale-95"
-          >
+          <button className="px-5 py-2 bg-yellow-400 text-gray-900 font-bold rounded-xl shadow-md hover:bg-yellow-300 active:scale-95 transition">
             Add Comment
           </button>
         </div>
