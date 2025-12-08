@@ -8,7 +8,6 @@ const PostSchema = new mongoose.Schema({
   likes:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
-// Text index for search across title and content
 PostSchema.index({ title: 'text', content: 'text' });
 
 module.exports = mongoose.model('Post', PostSchema);

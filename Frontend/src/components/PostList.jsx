@@ -40,6 +40,7 @@ export default function PostList() {
       );
     } catch (err) {
       toast.error("Failed to load posts");
+      console.log(err);
     } finally {
       setLoading(false);
     }
