@@ -52,7 +52,10 @@ export default function AuthForm() {
           </div>
 
           <h2 className="text-white text-3xl font-extrabold mt-3 drop-shadow">
-            Welcome To My Blog
+            Welcome To My
+          </h2>
+          <h2 className="text-white text-3xl font-extrabold mt-3 drop-shadow">
+            Blog
           </h2>
         </div>
 
