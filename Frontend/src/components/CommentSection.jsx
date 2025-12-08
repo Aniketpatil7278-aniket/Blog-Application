@@ -6,12 +6,23 @@ export default function CommentSection({ postId }) {
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
 
+  const getCurrentUserId = () => {
+    const cur = localStorage.getItem("currentUser");
+    if (!cur) return null;
+    try {
+      return JSON.parse(cur).id;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchComments = async () => {
     try {
       const res = await api.get(`/api/comments?post_id=${postId}`);
       setComments(res.data);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to load comments");
     }
   };
 
@@ -28,7 +39,7 @@ export default function CommentSection({ postId }) {
       fetchComments();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to add comment");
+      toast.error(err?.response?.data?.error || "Failed to add comment");
     }
   };
 
@@ -40,7 +51,8 @@ export default function CommentSection({ postId }) {
       fetchComments();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete");
+      const message = err?.response?.data?.error || "Failed to delete";
+      toast.error(message);
     }
   };
 
@@ -53,9 +65,12 @@ export default function CommentSection({ postId }) {
       fetchComments();
     } catch (err) {
       console.error(err);
-      toast.error("Update failed");
+      const message = err?.response?.data?.error || "Update failed";
+      toast.error(message);
     }
   };
+
+  const currentUserId = getCurrentUserId();
 
   return (
     <div className="mt-8 p-6 bg-white/30 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-xl">
@@ -63,38 +78,42 @@ export default function CommentSection({ postId }) {
 
       {/* COMMENT LIST */}
       <div className="space-y-4">
-        {comments.map((c) => (
-          <div
-            key={c._id}
-            className="p-4 bg-white/80 rounded-xl shadow-md"
-          >
-            <p className="text-gray-900 text-lg">{c.content}</p>
+        {comments.map((c) => {
+          const isOwner =
+            currentUserId &&
+            (c.author && (c.author._id ? c.author._id === currentUserId : c.author === currentUserId));
 
-            <p className="text-xs text-gray-600 mt-1">
-              By{" "}
-              <span className="font-semibold">
-                {c.author?.username || "Unknown"}
-              </span>{" "}
-              • {new Date(c.createdAt).toLocaleString()}
-            </p>
+          return (
+            <div key={c._id} className="p-4 bg-white/80 rounded-xl shadow-md">
+              <p className="text-gray-900 text-lg">{c.content}</p>
 
-            <div className="mt-3 flex gap-4">
-              <button
-                onClick={() => onEdit(c)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition"
-              >
-                ✏ Edit
-              </button>
+              <p className="text-xs text-gray-600 mt-1">
+                By <span className="font-semibold">{c.author?.username || "Unknown"}</span> •{" "}
+                {new Date(c.createdAt).toLocaleString()}
+              </p>
 
-              <button
-                onClick={() => onDelete(c._id)}
-                className="text-red-600 hover:text-red-800 text-sm font-semibold transition"
-              >
-                🗑 Delete
-              </button>
+              <div className="mt-3 flex gap-4">
+                {isOwner && (
+                  <>
+                    <button
+                      onClick={() => onEdit(c)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition"
+                    >
+                      ✏ Edit
+                    </button>
+
+                    <button
+                      onClick={() => onDelete(c._id)}
+                      className="text-red-600 hover:text-red-800 text-sm font-semibold transition"
+                    >
+                      🗑 Delete
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ADD COMMENT */}
